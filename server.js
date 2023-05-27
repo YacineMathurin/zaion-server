@@ -4,6 +4,7 @@ const fs = require("fs");
 
 // Creating a new websocket server
 const port = 3050;
+const heartbeatInterval = 3000;
 const wss = new WebSocketServer.Server({ port });
 
 function heartbeat() {
@@ -20,11 +21,12 @@ const interval = setInterval(function ping() {
     ws.ping();
     console.log("Ping");
   });
-}, 3000);
+}, heartbeatInterval);
 
 // Creating connection using websocket
 wss.on("connection", (ws) => {
   console.log("New Connection");
+
   ws.isAlive = true;
   ws.on('pong', heartbeat);
 
@@ -37,7 +39,6 @@ wss.on("connection", (ws) => {
 
     fs.readFile(`${__dirname}/files/${data}`, "utf8", (err, data) => {
       if (err) {
-        // console.error(err);
         return ws.send("Something went wrong when fetching the file, check the file name and its extension ");
       }
       ws.send(data);
@@ -52,6 +53,7 @@ wss.on("connection", (ws) => {
   // handling what to do when clients disconnects from server
   ws.on("close", () => {
     console.log("Connection closed");
+
     ws.send("Connection closed");
     clearInterval(interval);
   });
